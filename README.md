@@ -1,6 +1,6 @@
 # People-Based Task Manager
 
-A personal task manager that organizes tasks by the people they affect. Built with React, TypeScript, Vite, and Supabase.
+A personal task manager that organizes tasks by the people they affect. Built with React, TypeScript, Vite, and Supabase for all the overwhelmed introverts.
 
 ## Features
 
