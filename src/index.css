@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-900;
+  }
+}
+
+@layer components {
+  input[type="text"],
+  input[type="datetime-local"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    @apply block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm 
+    focus:border-indigo-500 focus:ring-indigo-500 
+    dark:bg-gray-800 dark:text-gray-100 
+    dark:placeholder-gray-400
+    dark:focus:border-indigo-400 dark:focus:ring-indigo-400;
+  }
+
+  select option {
+    @apply dark:bg-gray-800 dark:text-gray-100;
+  }
+
+  input[type="checkbox"] {
+    @apply rounded border-gray-300 dark:border-gray-600 
+    text-indigo-600 
+    focus:ring-indigo-500 
+    dark:bg-gray-800 
+    dark:checked:bg-indigo-500 
+    dark:focus:ring-indigo-400;
+  }
+}
