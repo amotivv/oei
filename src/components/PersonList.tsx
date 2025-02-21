@@ -81,34 +81,37 @@ export function PersonList({ persons, tasks, onSelectPerson, selectedPersonIds, 
         </div>
       )}
       
-      <div className="flex items-center justify-between mb-6 p-4">
-        <div className="flex items-center gap-2">
-          <Users className="w-6 h-6 text-gray-400 dark:text-gray-500" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">People</h2>
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">People</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-100"
+              >
+                {sortOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => onOpenPersonForm()}
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full"
+              title="Add a person to organize tasks around"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => onOpenPersonForm()}
-          className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full"
-          title="Add a person to organize tasks around"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
       </div>
 
-      <div className="flex items-center gap-2 mb-6 px-4 relative z-10">
-        <ArrowUpDown className="w-5 h-5 text-gray-500" />
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as SortOption)}
-          className="flex-1 rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-        >
-          {sortOptions.map(option => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-2 p-2">
+      <div className="divide-y divide-gray-200 dark:divide-gray-700">
         {sortedPersons.map((person) => {
           const stats = getPersonStats(person);
           const hasUrgentTasks = stats.overdueTasks.length > 0 || stats.highPriorityTasks.length > 0;
@@ -117,18 +120,14 @@ export function PersonList({ persons, tasks, onSelectPerson, selectedPersonIds, 
           return (
             <div
               key={person.id}
-              className={`flex items-start gap-4 p-4 rounded-lg transition-colors ${
+              className={`p-4 lg:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                 selectedPersonIds.includes(person.id)
-                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-2 border-indigo-500 dark:border-indigo-400'
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-2 border-transparent'
+                  ? 'bg-indigo-50 dark:bg-indigo-900/30'
+                  : ''
               } ${isDeleting ? 'opacity-50' : ''}`}
             >
-              <button
-                className="flex-1 flex items-start gap-4"
-                onClick={() => onSelectPerson(person.id)}
-                disabled={isDeleting}
-              >
-                <div className="relative">
+              <div className="flex items-start gap-4">
+                <div className="relative flex-shrink-0">
                   <img
                     src={person.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random`}
                     alt={person.name}
@@ -146,9 +145,19 @@ export function PersonList({ persons, tasks, onSelectPerson, selectedPersonIds, 
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100">{person.name}</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{person.role}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">{person.department}</p>
+                  <button
+                    onClick={() => onSelectPerson(person.id)}
+                    disabled={isDeleting}
+                    className="font-medium text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  >
+                    {person.name}
+                  </button>
+                  {person.role && person.role !== person.department && (
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{person.role}</p>
+                  )}
+                  {person.department && (
+                    <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">{person.department}</p>
+                  )}
                   
                   <div className="mt-2 flex flex-wrap gap-2">
                     {stats.openTasks.length > 0 && (
@@ -168,26 +177,26 @@ export function PersonList({ persons, tasks, onSelectPerson, selectedPersonIds, 
                     )}
                   </div>
                 </div>
-              </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onOpenPersonForm(person)}
-                  disabled={isDeleting}
-                  className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(person)}
-                  disabled={isDeleting}
-                  className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isDeleting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </button>
+                <div className="flex gap-2 ml-4">
+                  <button
+                    onClick={() => onOpenPersonForm(person)}
+                    disabled={isDeleting}
+                    className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(person)}
+                    disabled={isDeleting}
+                    className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           );

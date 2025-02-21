@@ -380,13 +380,13 @@ function App() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowPeopleLanding(true)}
-              className={secondaryButton}
+              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full"
+              title="View People"
             >
-              <Users className="w-4 h-4 mr-1.5" />
-              View People
+              <Users className="w-5 h-5" />
             </button>
             
-            <div className="relative h-9">
+            <div className="relative h-9 ml-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
@@ -408,12 +408,6 @@ function App() {
               <label htmlFor="showCompleted" className="ml-2 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                 Show completed
               </label>
-            </div>
-            
-            <div className="h-9 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
-            
-            <div className="h-9 px-3 flex items-center border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
-              <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[160px]">{user.email}</span>
             </div>
             
             <button
