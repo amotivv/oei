@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, AlertCircle, Filter, Search, CheckCircle2, Circle, ArrowUpCircle, ChevronDown } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, Filter, Search, CheckCircle2, Circle, ArrowUpCircle, ChevronDown, Loader2 } from 'lucide-react';
 import { format, isAfter, isBefore, startOfToday } from 'date-fns';
-import type { TaskWithAssignees } from '../types';
+import { supabase } from '../lib/supabase';
+import type { TaskWithAssignees, Task } from '../types';
 
 interface TaskListProps {
   tasks: TaskWithAssignees[];
@@ -27,17 +28,20 @@ const statusConfig = {
   pending: {
     color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200',
     icon: Circle,
-    label: 'To Do'
+    label: 'To Do',
+    next: 'in_progress'
   },
   in_progress: {
     color: 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200',
     icon: ArrowUpCircle,
-    label: 'In Progress'
+    label: 'In Progress',
+    next: 'completed'
   },
   completed: {
     color: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200',
     icon: CheckCircle2,
-    label: 'Completed'
+    label: 'Completed',
+    next: 'pending'
   }
 };
 
@@ -45,6 +49,8 @@ export function TaskList({ tasks, onEditTask }: TaskListProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const today = startOfToday();
 
   const filteredTasks = tasks.filter(task => {
@@ -67,8 +73,49 @@ export function TaskList({ tasks, onEditTask }: TaskListProps) {
     return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
   });
 
+  const handleStatusClick = async (e: React.MouseEvent, task: TaskWithAssignees) => {
+    e.stopPropagation();
+    if (updatingTaskId) return;
+
+    setError(null);
+    setUpdatingTaskId(task.id);
+    const nextStatus = statusConfig[task.status].next as Task['status'];
+
+    // Optimistically update UI
+    onEditTask({
+      ...task,
+      status: nextStatus
+    });
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ status: nextStatus })
+        .eq('id', task.id);
+
+      if (error) {
+        setError('Failed to update task status. Please try again.');
+        // Revert optimistic update
+        onEditTask(task);
+      }
+    } catch (err) {
+      setError('Network error. Please check your connection.');
+      // Revert optimistic update
+      onEditTask(task);
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-200">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Mobile Filters */}
       <div className="lg:hidden p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="relative">
@@ -172,23 +219,32 @@ export function TaskList({ tasks, onEditTask }: TaskListProps) {
             const dueDate = new Date(task.due_date);
             const isOverdue = isBefore(dueDate, today) && task.status !== 'completed';
             const isDueSoon = !isOverdue && isBefore(dueDate, new Date(today.getTime() + 24 * 60 * 60 * 1000));
+            const isUpdating = updatingTaskId === task.id;
             
             const StatusIcon = statusConfig[task.status].icon;
 
             return (
               <div
                 key={task.id}
-                onClick={() => onEditTask(task)}
-                className={`p-4 lg:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
+                className={`p-4 lg:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                   task.status === 'completed' ? 'opacity-75' : ''
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  <div className={`p-2 rounded-full ${statusConfig[task.status].color}`}>
-                    <StatusIcon className="w-5 h-5" />
-                  </div>
+                  <button
+                    onClick={(e) => handleStatusClick(e, task)}
+                    disabled={isUpdating}
+                    className={`p-2 rounded-full ${statusConfig[task.status].color} transition-opacity ${isUpdating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+                    title={`Click to mark as ${statusConfig[task.status].next.replace('_', ' ')}`}
+                  >
+                    {isUpdating ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <StatusIcon className="w-5 h-5" />
+                    )}
+                  </button>
                   
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0" onClick={() => onEditTask(task)}>
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-2 lg:gap-4">
                       <h3 className={`text-base font-semibold break-words ${
                         task.status === 'completed' 
